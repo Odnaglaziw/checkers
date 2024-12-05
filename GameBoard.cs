@@ -46,28 +46,29 @@ namespace checkers
         private void InitializeCheckers()
         {
             // Расставляем черные шашки (сверху)
-            for (int row = 0; row < 3; row++)
-            {
-                for (int col = 0; col < gridSize; col++)
-                {
-                    if ((row + col) % 2 != 0)
-                    {
-                        checkers[row, col] = new Checker(col, row, isBlack: true);
-                    }
-                }
-            }
-
+            //for (int row = 0; row < 3; row++)
+            //{
+            //    for (int col = 0; col < gridSize; col++)
+            //    {
+            //        if ((row + col) % 2 != 0)
+            //        {
+            //            checkers[row, col] = new Checker(col, row, isBlack: true);
+            //        }
+            //    }
+            //}
+            checkers[2, 2] = new Checker(2, 2, isBlack: true);
+            checkers[5, 5] = new Checker(5, 5, isBlack: false);
             // Расставляем белые шашки (снизу)
-            for (int row = gridSize - 3; row < gridSize; row++)
-            {
-                for (int col = 0; col < gridSize; col++)
-                {
-                    if ((row + col) % 2 != 0)
-                    {
-                        checkers[row, col] = new Checker(col, row, isBlack: false);
-                    }
-                }
-            }
+            //for (int row = gridSize - 3; row < gridSize; row++)
+            //{
+            //    for (int col = 0; col < gridSize; col++)
+            //    {
+            //        if ((row + col) % 2 != 0)
+            //        {
+            //            checkers[row, col] = new Checker(col, row, isBlack: false);
+            //        }
+            //    }
+            //}
         }
         private void GameBoard_Paint(object sender, PaintEventArgs e)
         {
@@ -255,7 +256,8 @@ namespace checkers
             if (checkers[oldX, oldY].IsBlack != isBlack) return;
             if (isCapture) checkers[capturedX, capturedY] = null!;
             checkers[oldX, oldY].MoveTo(newX, newY);
-            checkers[oldY, oldX] = null!;
+            checkers[newX, newY] = checkers[oldX, oldY];
+            checkers[oldX, oldY] = null!;
             Invalidate();
         }
     }

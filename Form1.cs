@@ -30,6 +30,7 @@ namespace checkers
             byte[] buffer = new byte[1024];
             var result = await client.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
             string response = Encoding.UTF8.GetString(buffer, 0, result.Count);
+            
             try
             {
                 // Десериализация JSON-ответа в объект класса Action
