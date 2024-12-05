@@ -56,8 +56,8 @@ namespace checkers
             //        }
             //    }
             //}
-            checkers[2, 2] = new Checker(2, 2, isBlack: true);
-            checkers[5, 5] = new Checker(5, 5, isBlack: false);
+            checkers[1, 2] = new Checker(1, 2, isBlack: true);
+            checkers[2, 5] = new Checker(2, 5, isBlack: false);
             // Расставляем белые шашки (снизу)
             //for (int row = gridSize - 3; row < gridSize; row++)
             //{
@@ -138,8 +138,8 @@ namespace checkers
 
                 // Обновляем позицию шашки
                 selectedChecker.MoveTo(clickedX, clickedY);
-                checkers[oldY, oldX] = null!;
-                checkers[clickedY, clickedX] = selectedChecker;
+                checkers[oldX, oldY] = null!;
+                checkers[clickedX, clickedY] = selectedChecker;
 
                 // Проверяем, была ли это рубка
                 bool isCapture = false;
@@ -149,7 +149,7 @@ namespace checkers
                     capturedY = (clickedY + oldY) / 2;
 
                     // Удаляем шашку противника
-                    checkers[capturedY, capturedX] = null!;
+                    checkers[capturedX, capturedY] = null!;
                     isCapture = true;
                 }
 
@@ -210,19 +210,19 @@ namespace checkers
                     {
                         var currentPos = new Point(newX, newY);
 
-                        if (checkers[newY, newX] == null && !visited.Contains(currentPos) && !onlyCapture)
+                        if (checkers[newX,newY] == null && !visited.Contains(currentPos) && !onlyCapture)
                         {
                             moves.Add(currentPos); // Добавляем обычный ход
                             visited.Add(currentPos);
                         }
-                        else if (checkers[newY, newX] != null &&
-                                 checkers[newY, newX].IsBlack != currentChecker.IsBlack)
+                        else if (checkers[newX, newY] != null &&
+                                 checkers[newX,newY].IsBlack != currentChecker.IsBlack)
                         {
                             int jumpX = newX + move.Item1;
                             int jumpY = newY + move.Item2;
 
                             if (jumpX >= 0 && jumpY >= 0 && jumpX < gridSize && jumpY < gridSize &&
-                                checkers[jumpY, jumpX] == null)
+                                checkers[jumpX, jumpY] == null)
                             {
                                 var jumpPos = new Point(jumpX, jumpY);
 
@@ -255,9 +255,11 @@ namespace checkers
         {
             if (checkers[oldX, oldY].IsBlack != isBlack) return;
             if (isCapture) checkers[capturedX, capturedY] = null!;
-            checkers[oldX, oldY].MoveTo(newX, newY);
-            checkers[newX, newY] = checkers[oldX, oldY];
+            selectedChecker = checkers[oldX, oldY];
+            selectedChecker.MoveTo(newX, newY);
             checkers[oldX, oldY] = null!;
+            checkers[newX, newY] = selectedChecker;
+            selectedChecker = null!;
             Invalidate();
         }
     }
