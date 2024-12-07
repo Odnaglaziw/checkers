@@ -3,8 +3,8 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Encodings.Web;
 using System;
-using System.DirectoryServices.ActiveDirectory;
-using System.Net.Http.Headers;
+using System.Drawing;
+using System.Windows.Forms;
 
 namespace checkers
 {
@@ -19,16 +19,18 @@ namespace checkers
 
         public Form1(Lobby lobby)
         {
+            InitializeComponent();
             System.Windows.Forms.Timer timer = new System.Windows.Forms.Timer()
             {
                 Interval = 16
             };
             timer.Tick += (s, e) =>
             {
-                label4.Text = (lastpart - DateTime.Now).TotalSeconds.ToString("3F");
+                UpdateLabelSafe(label4, (lastpart - DateTime.Now).TotalSeconds.ToString());
             };
             timer.Start();
-            if (lobby.Connected != 0) 
+
+            if (lobby.Connected != 0)
             {
                 white = false;
                 gameBoard1.CanPlay = false;
@@ -40,11 +42,11 @@ namespace checkers
             }
             Text = lobby.LobbyName;
             DoubleBuffered = true;
-            InitializeComponent();
+
             Upd();
-            lastpart = DateTime.Now+new TimeSpan(0,0,60);
+            lastpart = DateTime.Now + new TimeSpan(0, 0, 60);
             gameBoard1.MoveMade += GameBoard1_MoveMade;
-            
+
             System.Windows.Forms.Timer gameBoard1_Timer = new System.Windows.Forms.Timer();
             gameBoard1_Timer.Interval = 16;
             gameBoard1_Timer.Tick += GameBoard1_Timer_Tick;
@@ -53,23 +55,17 @@ namespace checkers
 
         public void Client_OnMessageReceived(string message)
         {
-            //MessageBox.Show($"GAME\n{message}");
             try
             {
                 if (message == "swap")
                 {
                     gameBoard1.CanPlay = !gameBoard1.CanPlay;
                     lastpart = DateTime.Now + new TimeSpan(0, 0, 60);
-                    if (gameBoard1.CanPlay)
-                    {
-                        label5.Text = "Ваш ход";
-                    }
-                    else
-                    {
-                        label5.Text = "Чужой ход";
-                    }
+
+                    UpdateLabelSafe(label5, gameBoard1.CanPlay ? "Ваш ход" : "Чужой ход");
                     return;
                 }
+
                 var text = message.Substring(7);
                 var action = JsonSerializer.Deserialize<Action>(text);
                 if (action != null)
@@ -97,10 +93,10 @@ namespace checkers
 
         private async void GameBoard1_Timer_Tick(object? sender, EventArgs e)
         {
-            label2.Text = $"Белых: {gameBoard1.WhiteCount}";
-            label3.Text = $"Чёрных: {gameBoard1.BlackCount}";
+            UpdateLabelSafe(label2, $"Белых: {gameBoard1.WhiteCount}");
+            UpdateLabelSafe(label3, $"Чёрных: {gameBoard1.BlackCount}");
         }
-        
+
         private async void GameBoard1_MoveMade(object? sender, MoveEventArgs e)
         {
             string comand = e.MoverIsBlack ? "black" : "white";
@@ -143,6 +139,18 @@ namespace checkers
         {
             base.OnFormClosing(e);
             Program.game = null;
+        }
+
+        private void UpdateLabelSafe(Label label, string text)
+        {
+            if (label.InvokeRequired)
+            {
+                label.Invoke(new System.Action(() => label.Text = text));
+            }
+            else
+            {
+                label.Text = text;
+            }
         }
     }
 }
