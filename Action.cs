@@ -21,7 +21,7 @@ namespace checkers
 
         [JsonPropertyName("IsCapture")]
         public bool iscapture { get; set; }
-        [JsonPropertyName("Capture")]
+        [JsonPropertyName("capture")]
         public string capture { get; set; }
     }
 }

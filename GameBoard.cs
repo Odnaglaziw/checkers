@@ -8,16 +8,55 @@ namespace checkers
 {
     using System;
     using System.Drawing;
+    using System.Net.Http.Headers;
     using System.Windows.Forms;
+    using System.Xml.Linq;
 
     public class GameBoard : Panel
     {
+        private readonly List<(int x,int y)> whites = new List<(int x, int y)>()
+        {
+            (0,5),(2,5),(4,5),(6,5),
+            (1,6),(3,6),(5,6),(7,6),
+            (0,7),(2,7),(4,7),(6,7)
+        };
+        private readonly List<(int x, int y)> blacks = new List<(int x, int y)>()
+        {
+            (1,0),(3,0),(5,0),(7,0),
+            (0,1),(2,1),(4,1),(6,1),
+            (1,2),(3,2),(5,2),(7,2)
+        };
         private int gridSize = 8; 
         private Checker[,] checkers;
         private Checker selectedChecker = null!;
         private List<Point> validMoves = new List<Point>();
         private List<Point> capturedCheckers = new List<Point>();
         public event EventHandler<MoveEventArgs> MoveMade;
+        public int WhiteCount
+        {
+            get
+            {
+                List<Checker> xexe = new List<Checker>();
+                foreach (Checker checker in checkers) { 
+                    if (checker != null)
+                    xexe.Add(checker);
+                }
+                return xexe.Count(c => !c.IsBlack);
+            }
+        }
+        public int BlackCount
+        {
+            get
+            {
+                List<Checker> xexe = new List<Checker>();
+                foreach (Checker checker in checkers)
+                {
+                    if (checker != null)
+                    xexe.Add(checker);
+                }
+                return xexe.Count(c => c.IsBlack);
+            }
+        }
         public GameBoard()
         {
             DoubleBuffered = true;
@@ -41,34 +80,23 @@ namespace checkers
             }
         }
         public bool White;
+        public bool CanPlay;
         public Color LightCellColor { get; set; } = Color.White; 
         public Color DarkCellColor { get; set; } = Color.Black;
         private void InitializeCheckers()
         {
             // Расставляем черные шашки (сверху)
-            //for (int row = 0; row < 3; row++)
-            //{
-            //    for (int col = 0; col < gridSize; col++)
-            //    {
-            //        if ((row + col) % 2 != 0)
-            //        {
-            //            checkers[row, col] = new Checker(col, row, isBlack: true);
-            //        }
-            //    }
-            //}
-            checkers[1, 2] = new Checker(1, 2, isBlack: true);
-            checkers[2, 5] = new Checker(2, 5, isBlack: false);
+            foreach (var ints in blacks)
+            {
+                checkers[ints.x, ints.y] = new Checker(ints.x, ints.y, true);
+            }
+            //checkers[1, 2] = new Checker(1, 2, isBlack: true);
+            //checkers[2, 5] = new Checker(2, 5, isBlack: false);
             // Расставляем белые шашки (снизу)
-            //for (int row = gridSize - 3; row < gridSize; row++)
-            //{
-            //    for (int col = 0; col < gridSize; col++)
-            //    {
-            //        if ((row + col) % 2 != 0)
-            //        {
-            //            checkers[row, col] = new Checker(col, row, isBlack: false);
-            //        }
-            //    }
-            //}
+            foreach (var ints in whites)
+            {
+                checkers[ints.x, ints.y] = new Checker(ints.x, ints.y, false);
+            }
         }
         private void GameBoard_Paint(object sender, PaintEventArgs e)
         {
@@ -94,6 +122,7 @@ namespace checkers
         }
         protected override void OnMouseDown(MouseEventArgs e)
         {
+            if (!CanPlay) return;
             int cellSize = Math.Min(Width, Height) / gridSize;
             int clickedX = e.X / cellSize;
             int clickedY = e.Y / cellSize;
@@ -124,6 +153,7 @@ namespace checkers
         }
         protected override void OnMouseUp(MouseEventArgs e)
         {
+            if (!CanPlay) return;
             if (selectedChecker == null) return;
 
             int cellSize = Math.Min(Width, Height) / gridSize;
@@ -152,7 +182,6 @@ namespace checkers
                     checkers[capturedX, capturedY] = null!;
                     isCapture = true;
                 }
-
                 // Генерация события
                 OnMoveMade(new MoveEventArgs
                 {
@@ -261,6 +290,35 @@ namespace checkers
             checkers[newX, newY] = selectedChecker;
             selectedChecker = null!;
             Invalidate();
+        }
+        private bool HasCaptureMoves(Checker checker)
+        {
+            // Перебираем все возможные направления для текущей шашки
+            foreach (var move in Checker.moves)
+            {
+                int newX = checker.X + move.Item1;
+                int newY = checker.Y + move.Item2;
+
+                // Проверяем, что клетка находится в пределах игрового поля
+                if (newX >= 0 && newY >= 0 && newX < gridSize && newY < gridSize)
+                {
+                    // Если на соседней клетке есть шашка противника
+                    if (checkers[newX, newY] != null && checkers[newX, newY].IsBlack != checker.IsBlack)
+                    {
+                        int jumpX = newX + move.Item1;
+                        int jumpY = newY + move.Item2;
+
+                        // Проверяем, что клетка за шашкой противника свободна и находится в пределах игрового поля
+                        if (jumpX >= 0 && jumpY >= 0 && jumpX < gridSize && jumpY < gridSize &&
+                            checkers[jumpX, jumpY] == null)
+                        {
+                            return true; // Найдена возможность для рубки
+                        }
+                    }
+                }
+            }
+
+            return false; // Возможностей для рубки нет
         }
     }
 }

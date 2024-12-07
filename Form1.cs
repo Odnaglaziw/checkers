@@ -3,45 +3,44 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Encodings.Web;
 using System;
+using System.DirectoryServices.ActiveDirectory;
+using System.Net.Http.Headers;
 
 namespace checkers
 {
     public partial class Form1 : Form
     {
-        private ClientWebSocket client; // Глобальный WebSocket
         private bool white = true;
-
-        public Form1()
+        System.Windows.Forms.Timer timer = new System.Windows.Forms.Timer()
         {
+            Interval = 1
+        };
+        DateTime lastpart;
+
+        public Form1(Lobby lobby)
+        {
+            Text = lobby.LobbyName;
             DoubleBuffered = true;
             InitializeComponent();
-            InitializeWebSocket(); // Инициализация WebSocket
             Upd();
             gameBoard1.MoveMade += GameBoard1_MoveMade;
+            gameBoard1.CanPlay = true;
             System.Windows.Forms.Timer gameBoard1_Timer = new System.Windows.Forms.Timer();
             gameBoard1_Timer.Interval = 16;
             gameBoard1_Timer.Tick += GameBoard1_Timer_Tick;
             gameBoard1_Timer.Start();
         }
 
-        private async void GameBoard1_Timer_Tick(object? sender, EventArgs e)
+        public void Client_OnMessageReceived(string message)
         {
-            // Получение ответа от сервера
-            byte[] buffer = new byte[1024];
-            var result = await client.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
-            string response = Encoding.UTF8.GetString(buffer, 0, result.Count);
-            
+            //MessageBox.Show($"GAME\n{message}");
             try
             {
-                // Десериализация JSON-ответа в объект класса Action
-                var action = JsonSerializer.Deserialize<Action>(response);
+                var text = message.Substring(7);
+                var action = JsonSerializer.Deserialize<Action>(text);
 
                 if (action != null)
                 {
-                    //MessageBox.Show($"Действие: {action.action}\n" +
-                    //                $"Откуда: {action.from}\n" +
-                    //                $"Куда: {action.to}\n" +
-                    //                $"Это захват: {action.iscapture}");
                     Point from = new Point(int.Parse(action.from.Split(':')[0]), int.Parse(action.from.Split(':')[1]));
                     Point to = new Point(int.Parse(action.to.Split(':')[0]), int.Parse(action.to.Split(':')[1]));
                     bool isBlack = action.action == "black";
@@ -51,51 +50,41 @@ namespace checkers
                         capture = new Point(int.Parse(action.capture.Split(':')[0]), int.Parse(action.capture.Split(':')[1]));
                     }
                     gameBoard1.MoveTo(from.X, from.Y, to.X, to.Y, isBlack, capture.X, capture.Y, action.iscapture);
-                    byte[] buffer2 = Encoding.UTF8.GetBytes("Получил указания, передвинул");
-                    await client.SendAsync(new ArraySegment<byte>(buffer2), WebSocketMessageType.Text, true, CancellationToken.None);
                 }
                 else
                 {
-                    MessageBox.Show("Не удалось обработать ответ сервера.");
+                    MessageBox.Show("Ошибка отправки сообщения.");
                 }
             }
             catch (JsonException ex)
             {
-                MessageBox.Show($"Ошибка десериализации JSON: {ex.Message}");
+                MessageBox.Show($"ошибка JSON: {ex.Message}");
             }
         }
 
-        private async void InitializeWebSocket()
+        private async void GameBoard1_Timer_Tick(object? sender, EventArgs e)
         {
-            client = new ClientWebSocket();
-            Uri serverUri = new Uri("ws://192.168.1.199:65000/");
-            await client.ConnectAsync(serverUri, CancellationToken.None);
-            Console.WriteLine("Соединение с сервером установлено!");
+            label2.Text = $"Белых: {gameBoard1.WhiteCount}";
+            label3.Text = $"Чёрных: {gameBoard1.BlackCount}";
         }
-
+        
         private async void GameBoard1_MoveMade(object? sender, MoveEventArgs e)
         {
-            if (client.State != WebSocketState.Open)
-            {
-                MessageBox.Show("Соединение с сервером разорвано. Перезапустите клиент.");
-                return;
-            }
             string comand = e.MoverIsBlack ? "black" : "white";
             var options = new JsonSerializerOptions
             {
                 Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
             };
-            var message = JsonSerializer.Serialize(new
+            var action = JsonSerializer.Serialize(new
             {
                 Action = comand,
                 From = $"{e.From.X}:{e.From.Y}",
                 To = $"{e.To.X}:{e.To.Y}",
-                IsCapture = e.IsCapture,
+                e.IsCapture,
                 capture = $"{e.Capture.X}:{e.Capture.Y}"
             }, options);
-            byte[] buffer = Encoding.UTF8.GetBytes(message);
-            await client.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true, CancellationToken.None);
-            Console.WriteLine($"Сообщение отправлено: {message}");
+            string message = $"action:{action}";
+            await Program.client.SendMessageAsync(message);
         }
 
         private void Upd()
@@ -120,13 +109,7 @@ namespace checkers
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
             base.OnFormClosing(e);
-
-            // Закрытие WebSocket при завершении работы приложения
-            if (client != null && client.State == WebSocketState.Open)
-            {
-                client.CloseAsync(WebSocketCloseStatus.NormalClosure, "Соединение закрыто", CancellationToken.None).Wait();
-                client.Dispose();
-            }
+            Program.game = null;
         }
     }
 }
