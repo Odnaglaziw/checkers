@@ -21,18 +21,7 @@ namespace checkers
                 //MessageBox.Show($"MAIN\n{message}");
                 if (message.StartsWith("c")) return;
                 List<Lobby> lobbies = JsonSerializer.Deserialize<List<Lobby>>(message);
-                flowLayoutPanel1.Controls.Clear();
-                foreach (Lobby lobby in lobbies)
-                {
-                    if (flowLayoutPanel1.InvokeRequired)
-                    {
-
-                        flowLayoutPanel1.Invoke(new System.Action(() =>
-                        {
-                            flowLayoutPanel1.Controls.Add(new LobbyItem(lobby, Program.client._client));
-                        }));
-                    }
-                }
+                RefreshLobbies(lobbies);
             }
         }
 
@@ -56,6 +45,25 @@ namespace checkers
         {
             base.OnFormClosing(e);
             Program.client.Dispose();
+        }
+        private void RefreshLobbies(List<Lobby> lobbies)
+        {
+            if (flowLayoutPanel1.InvokeRequired)
+            {
+                flowLayoutPanel1.Invoke(new System.Action(() => RefreshLobbiesInternal(lobbies)));
+            }
+            else
+            {
+                RefreshLobbiesInternal(lobbies);
+            }
+        }
+        private void RefreshLobbiesInternal(List<Lobby> lobbies)
+        {
+            flowLayoutPanel1.Controls.Clear();
+            foreach (Lobby lobby in lobbies)
+            {
+                flowLayoutPanel1.Controls.Add(new LobbyItem(lobby, Program.client._client));
+            }
         }
     }
 }
