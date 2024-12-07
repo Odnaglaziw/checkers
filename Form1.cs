@@ -69,7 +69,15 @@ namespace checkers
                 {
                     MessageBox.Show("Противник отключился.");
                     Program.game = null;
-                    this.Close();
+                    if (this.InvokeRequired)
+                    {
+                        this.Invoke(new System.Action(() => this.Close()));
+                    }
+                    else
+                    {
+                        this.Close();
+                    }
+                    return;
                 }
 
                 var text = message.Substring(7);
