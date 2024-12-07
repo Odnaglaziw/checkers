@@ -29,13 +29,13 @@
         private void InitializeComponent()
         {
             panel1 = new Panel();
+            label4 = new Label();
             label3 = new Label();
             label2 = new Label();
-            button1 = new Button();
             label1 = new Label();
             pictureBox1 = new PictureBox();
             gameBoard1 = new GameBoard();
-            label4 = new Label();
+            label5 = new Label();
             panel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)pictureBox1).BeginInit();
             SuspendLayout();
@@ -43,10 +43,10 @@
             // panel1
             // 
             panel1.BackColor = SystemColors.ActiveBorder;
+            panel1.Controls.Add(label5);
             panel1.Controls.Add(label4);
             panel1.Controls.Add(label3);
             panel1.Controls.Add(label2);
-            panel1.Controls.Add(button1);
             panel1.Controls.Add(label1);
             panel1.Controls.Add(pictureBox1);
             panel1.Dock = DockStyle.Left;
@@ -55,6 +55,14 @@
             panel1.Name = "panel1";
             panel1.Size = new Size(200, 450);
             panel1.TabIndex = 1;
+            // 
+            // label4
+            // 
+            label4.AutoSize = true;
+            label4.Location = new Point(16, 145);
+            label4.Name = "label4";
+            label4.Size = new Size(0, 30);
+            label4.TabIndex = 5;
             // 
             // label3
             // 
@@ -73,16 +81,6 @@
             label2.Size = new Size(72, 30);
             label2.TabIndex = 3;
             label2.Text = "Белых";
-            // 
-            // button1
-            // 
-            button1.Location = new Point(73, 45);
-            button1.Name = "button1";
-            button1.Size = new Size(121, 37);
-            button1.TabIndex = 2;
-            button1.Text = "Сменить";
-            button1.UseVisualStyleBackColor = true;
-            button1.Click += button1_Click;
             // 
             // label1
             // 
@@ -113,14 +111,13 @@
             gameBoard1.Size = new Size(448, 450);
             gameBoard1.TabIndex = 2;
             // 
-            // label4
+            // label5
             // 
-            label4.AutoSize = true;
-            label4.Location = new Point(16, 145);
-            label4.Name = "label4";
-            label4.Size = new Size(68, 30);
-            label4.TabIndex = 5;
-            label4.Text = "label4";
+            label5.AutoSize = true;
+            label5.Location = new Point(73, 52);
+            label5.Name = "label5";
+            label5.Size = new Size(0, 30);
+            label5.TabIndex = 6;
             // 
             // Form1
             // 
@@ -142,11 +139,11 @@
 
         private Panel panel1;
         private GameBoard gameBoard1;
-        private Button button1;
         private Label label1;
         private PictureBox pictureBox1;
         private Label label3;
         private Label label2;
         private Label label4;
+        private Label label5;
     }
 }

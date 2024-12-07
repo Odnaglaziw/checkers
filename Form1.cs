@@ -19,12 +19,32 @@ namespace checkers
 
         public Form1(Lobby lobby)
         {
+            System.Windows.Forms.Timer timer = new System.Windows.Forms.Timer()
+            {
+                Interval = 16
+            };
+            timer.Tick += (s, e) =>
+            {
+                label4.Text = (lastpart - DateTime.Now).TotalSeconds.ToString("3F");
+            };
+            timer.Start();
+            if (lobby.Connected != 0) 
+            {
+                white = false;
+                gameBoard1.CanPlay = false;
+            }
+            else
+            {
+                white = true;
+                gameBoard1.CanPlay = true;
+            }
             Text = lobby.LobbyName;
             DoubleBuffered = true;
             InitializeComponent();
             Upd();
+            lastpart = DateTime.Now+new TimeSpan(0,0,60);
             gameBoard1.MoveMade += GameBoard1_MoveMade;
-            gameBoard1.CanPlay = true;
+            
             System.Windows.Forms.Timer gameBoard1_Timer = new System.Windows.Forms.Timer();
             gameBoard1_Timer.Interval = 16;
             gameBoard1_Timer.Tick += GameBoard1_Timer_Tick;
@@ -36,9 +56,22 @@ namespace checkers
             //MessageBox.Show($"GAME\n{message}");
             try
             {
+                if (message == "swap")
+                {
+                    gameBoard1.CanPlay = !gameBoard1.CanPlay;
+                    lastpart = DateTime.Now + new TimeSpan(0, 0, 60);
+                    if (gameBoard1.CanPlay)
+                    {
+                        label5.Text = "Ваш ход";
+                    }
+                    else
+                    {
+                        label5.Text = "Чужой ход";
+                    }
+                    return;
+                }
                 var text = message.Substring(7);
                 var action = JsonSerializer.Deserialize<Action>(text);
-
                 if (action != null)
                 {
                     Point from = new Point(int.Parse(action.from.Split(':')[0]), int.Parse(action.from.Split(':')[1]));
