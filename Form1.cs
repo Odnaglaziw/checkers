@@ -65,6 +65,12 @@ namespace checkers
                     UpdateLabelSafe(label5, gameBoard1.CanPlay ? "Ваш ход" : "Чужой ход");
                     return;
                 }
+                if (message == "Противник отключился.")
+                {
+                    MessageBox.Show("Противник отключился.");
+                    Program.game = null;
+                    this.Close();
+                }
 
                 var text = message.Substring(7);
                 var action = JsonSerializer.Deserialize<Action>(text);
