@@ -10,7 +10,10 @@ namespace checkers
     {
         public Main()
         {
-            InitializeComponent();
+            InitializeComponent(); 
+            flowLayoutPanel1.AutoScroll = true;
+            flowLayoutPanel1.WrapContents = true;
+            flowLayoutPanel1.FlowDirection = FlowDirection.LeftToRight;
         }
 
         public void Client_OnMessageReceived(string message)

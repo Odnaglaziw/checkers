@@ -74,7 +74,7 @@ namespace checkers
                     {
                         client.Dispose();
                         client = new Client("ws://odnaglaziw.online:65000/");
-                        //client.OnMessageReceived += WebSocketClient_OnMessageReceived;
+                        client.OnMessageReceived += WebSocketClient_OnMessageReceived;
                         client.OnDisconnected += WebSocketClient_OnDisconnected;
                         await client.ConnectAsync();
                         MessageBox.Show("Подключение восстановленно.", "Подключение", MessageBoxButtons.OK, MessageBoxIcon.Information);

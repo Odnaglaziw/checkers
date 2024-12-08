@@ -29,10 +29,10 @@
         private void InitializeComponent()
         {
             panel1 = new Panel();
+            textBox1 = new TextBox();
             button2 = new Button();
             button1 = new Button();
             flowLayoutPanel1 = new FlowLayoutPanel();
-            textBox1 = new TextBox();
             panel1.SuspendLayout();
             SuspendLayout();
             // 
@@ -46,6 +46,13 @@
             panel1.Name = "panel1";
             panel1.Size = new Size(200, 450);
             panel1.TabIndex = 1;
+            // 
+            // textBox1
+            // 
+            textBox1.Location = new Point(12, 348);
+            textBox1.Name = "textBox1";
+            textBox1.Size = new Size(182, 35);
+            textBox1.TabIndex = 2;
             // 
             // button2
             // 
@@ -72,21 +79,14 @@
             flowLayoutPanel1.Dock = DockStyle.Fill;
             flowLayoutPanel1.Location = new Point(200, 0);
             flowLayoutPanel1.Name = "flowLayoutPanel1";
-            flowLayoutPanel1.Size = new Size(600, 450);
+            flowLayoutPanel1.Size = new Size(821, 450);
             flowLayoutPanel1.TabIndex = 2;
-            // 
-            // textBox1
-            // 
-            textBox1.Location = new Point(12, 348);
-            textBox1.Name = "textBox1";
-            textBox1.Size = new Size(182, 35);
-            textBox1.TabIndex = 2;
             // 
             // Main
             // 
             AutoScaleDimensions = new SizeF(12F, 30F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(800, 450);
+            ClientSize = new Size(1021, 450);
             Controls.Add(flowLayoutPanel1);
             Controls.Add(panel1);
             Font = new Font("Segoe UI", 15.75F, FontStyle.Regular, GraphicsUnit.Point, 204);

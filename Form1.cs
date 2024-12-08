@@ -28,7 +28,6 @@ namespace checkers
             {
                 UpdateLabelSafe(label4, (lastpart - DateTime.Now).TotalSeconds.ToString());
             };
-            timer.Start();
 
             if (lobby.Connected != 0)
             {
@@ -38,7 +37,7 @@ namespace checkers
             else
             {
                 white = true;
-                gameBoard1.CanPlay = true;
+                gameBoard1.CanPlay = false;
             }
             Text = lobby.LobbyName;
             DoubleBuffered = true;
@@ -46,7 +45,7 @@ namespace checkers
             Upd();
             lastpart = DateTime.Now + new TimeSpan(0, 0, 60);
             gameBoard1.MoveMade += GameBoard1_MoveMade;
-
+            timer.Start();
             System.Windows.Forms.Timer gameBoard1_Timer = new System.Windows.Forms.Timer();
             gameBoard1_Timer.Interval = 16;
             gameBoard1_Timer.Tick += GameBoard1_Timer_Tick;
@@ -65,6 +64,13 @@ namespace checkers
                     UpdateLabelSafe(label5, gameBoard1.CanPlay ? "Ваш ход" : "Чужой ход");
                     return;
                 }
+                if (message == "start")
+                {
+                    if (white) gameBoard1.CanPlay = true;
+                    lastpart = DateTime.Now + new TimeSpan(0, 0, 60);
+                    UpdateLabelSafe(label5, gameBoard1.CanPlay ? "Ваш ход" : "Чужой ход");
+                    return;
+                }
                 if (message == "Противник отключился.")
                 {
                     MessageBox.Show("Противник отключился.");
@@ -79,24 +85,26 @@ namespace checkers
                     }
                     return;
                 }
-
-                var text = message.Substring(7);
-                var action = JsonSerializer.Deserialize<Action>(text);
-                if (action != null)
+                if (message.StartsWith("action"))
                 {
-                    Point from = new Point(int.Parse(action.from.Split(':')[0]), int.Parse(action.from.Split(':')[1]));
-                    Point to = new Point(int.Parse(action.to.Split(':')[0]), int.Parse(action.to.Split(':')[1]));
-                    bool isBlack = action.action == "black";
-                    Point capture = Point.Empty;
-                    if (action.iscapture)
+                    var text = message.Substring(7);
+                    var action = JsonSerializer.Deserialize<Action>(text);
+                    if (action != null)
                     {
-                        capture = new Point(int.Parse(action.capture.Split(':')[0]), int.Parse(action.capture.Split(':')[1]));
+                        Point from = new Point(int.Parse(action.from.Split(':')[0]), int.Parse(action.from.Split(':')[1]));
+                        Point to = new Point(int.Parse(action.to.Split(':')[0]), int.Parse(action.to.Split(':')[1]));
+                        bool isBlack = action.action == "black";
+                        Point capture = Point.Empty;
+                        if (action.iscapture)
+                        {
+                            capture = new Point(int.Parse(action.capture.Split(':')[0]), int.Parse(action.capture.Split(':')[1]));
+                        }
+                        gameBoard1.MoveTo(from.X, from.Y, to.X, to.Y, isBlack, capture.X, capture.Y, action.iscapture);
                     }
-                    gameBoard1.MoveTo(from.X, from.Y, to.X, to.Y, isBlack, capture.X, capture.Y, action.iscapture);
-                }
-                else
-                {
-                    MessageBox.Show("Ошибка отправки сообщения.");
+                    else
+                    {
+                        MessageBox.Show("Ошибка отправки сообщения.");
+                    }
                 }
             }
             catch (JsonException ex)

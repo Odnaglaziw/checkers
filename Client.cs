@@ -72,7 +72,7 @@ namespace checkers
             {
                 try
                 {
-                    byte[] buffer = new byte[1024];
+                    byte[] buffer = new byte[10240];
                     while (_client.State == WebSocketState.Open)
                     {
                         var result = await _client.ReceiveAsync(new ArraySegment<byte>(buffer), _cancellationTokenSource.Token);
@@ -83,7 +83,7 @@ namespace checkers
                             LogConnection("Соединение закрыто сервером.");
                             break;
                         }
-
+                        LogError("Я получил сообщение");
                         string message = Encoding.UTF8.GetString(buffer, 0, result.Count);
                         if (!string.IsNullOrEmpty(message)) OnMessageReceived?.Invoke(message);
                         Log($"Получено сообщение: {message}");
@@ -91,7 +91,7 @@ namespace checkers
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show(ex.Message);
+                    MessageBox.Show($"Ошибка получения сообщения: {ex.Message}");
                     LogError($"Ошибка получения сообщения: {ex.Message}");
                     OnDisconnected?.Invoke($"Ошибка получения сообщения: {ex.Message}");
                 }

@@ -35,7 +35,7 @@ namespace checkers
             // Вычисляем центр клетки для рисования
             int centerX = X * cellSize + cellSize / 2;
             int centerY = Y * cellSize + cellSize / 2;
-            int diameter = cellSize - 10; // Размер шашки (чуть меньше клетки)
+            int diameter = cellSize - 12; // Размер шашки (чуть меньше клетки)
             int innerDiameter = diameter - 10; // Внутренний круг
 
             Brush checkerBrush = isBlack ? Brushes.Black : Brushes.White;
@@ -53,7 +53,7 @@ namespace checkers
             {
                 Font font = new Font("Arial", 14, FontStyle.Bold);
                 StringFormat format = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
-                g.DrawString("K", font, Brushes.Gold, centerX, centerY, format);
+                g.DrawString("♥", font, !isBlack?Brushes.Black:Brushes.White, centerX, centerY, format);
             }
         }
         public void MoveTo(int x, int y)

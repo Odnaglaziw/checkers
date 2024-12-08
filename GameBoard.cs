@@ -88,14 +88,20 @@ namespace checkers
             // Расставляем черные шашки (сверху)
             foreach (var ints in blacks)
             {
-                checkers[ints.x, ints.y] = new Checker(ints.x, ints.y, true);
+                checkers[ints.x, ints.y] = new Checker(ints.x, ints.y, true)
+                {
+                    IsKing = true,
+                };
             }
             //checkers[1, 2] = new Checker(1, 2, isBlack: true);
             //checkers[2, 5] = new Checker(2, 5, isBlack: false);
             // Расставляем белые шашки (снизу)
             foreach (var ints in whites)
             {
-                checkers[ints.x, ints.y] = new Checker(ints.x, ints.y, false);
+                checkers[ints.x, ints.y] = new Checker(ints.x, ints.y, false)
+                {
+                    IsKing = true,
+                };
             }
         }
         private void GameBoard_Paint(object sender, PaintEventArgs e)
