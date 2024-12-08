@@ -11,6 +11,7 @@ namespace checkers
     using System.Net.Http.Headers;
     using System.Windows.Forms;
     using System.Xml.Linq;
+    using static System.Windows.Forms.VisualStyles.VisualStyleElement.Button;
 
     public class GameBoard : Panel
     {
@@ -91,7 +92,7 @@ namespace checkers
             {
                 checkers[ints.x, ints.y] = new Checker(ints.x, ints.y, true)
                 {
-                    IsKing = true,
+                    IsKing = false,
                 };
             }
             //checkers[1, 2] = new Checker(1, 2, isBlack: true);
@@ -101,7 +102,7 @@ namespace checkers
             {
                 checkers[ints.x, ints.y] = new Checker(ints.x, ints.y, false)
                 {
-                    IsKing = true,
+                    IsKing = false,
                 };
             }
         }
@@ -139,7 +140,7 @@ namespace checkers
 
             if (selectedChecker != null)
             {
-                validMoves = GetValidMoves(selectedChecker);
+                validMoves = selectedChecker.IsKing ? GetKingMoves(gridSize,selectedChecker) : GetValidMoves(selectedChecker);
                 Invalidate(); // Перерисовываем поле для отображения подсветки
             }
             else
@@ -162,7 +163,7 @@ namespace checkers
                 }
                 if (selectedChecker != null)
                 {
-                    validMoves = GetValidMoves(selectedChecker);
+                    validMoves = selectedChecker.IsKing ? GetKingMoves(gridSize, selectedChecker) : GetValidMoves(selectedChecker);
                     Invalidate(); // Перерисовываем поле для отображения подсветки
                 }
             }
@@ -208,8 +209,14 @@ namespace checkers
                     HasCaptureMoves = HasCaptureMoves(selectedChecker)
                 });
 
-                // Сбрасываем выбор
+                if ((selectedChecker.Y == 0 && !selectedChecker.IsBlack) ||
+                    (selectedChecker.Y == gridSize - 1 && selectedChecker.IsBlack))
+                {
+                    selectedChecker.IsKing = true;
+                }
+
             }
+            // Сбрасываем выбор
             if (!isCapture) selectedChecker = null!;
             validMoves.Clear();
             capturedCheckers.Clear();
@@ -297,6 +304,42 @@ namespace checkers
             CheckMoves(checker, onlyCapture);
 
             return moves;
+        }
+        public List<Point> GetKingMoves(int gridSize, Checker checker)
+        {
+            var directions = new (int, int)[] { (1, 1), (-1, 1), (-1, -1), (1, -1) };
+            var validMoves = new List<Point>();
+
+            foreach (var direction in directions)
+            {
+                int stepX = checker.X + direction.Item1;
+                int stepY = checker.Y + direction.Item2;
+
+                while (stepX >= 0 && stepY >= 0 && stepX < gridSize && stepY < gridSize)
+                {
+                    if (checkers[stepX, stepY] == null)
+                    {
+                        validMoves.Add(new Point(stepX, stepY));
+                    }
+                    else
+                    {
+                        // Проверяем возможность рубки
+                        if (checkers[stepX, stepY].IsBlack != checker.IsBlack)
+                        {
+                            int jumpX = stepX + direction.Item1;
+                            int jumpY = stepY + direction.Item2;
+                            if (jumpX >= 0 && jumpY >= 0 && jumpX < gridSize && jumpY < gridSize && checkers[jumpX, jumpY] == null)
+                            {
+                                validMoves.Add(new Point(jumpX, jumpY));
+                            }
+                        }
+                        break; // Останавливаемся на препятствии
+                    }
+                    stepX += direction.Item1;
+                    stepY += direction.Item2;
+                }
+            }
+            return validMoves;
         }
         protected virtual void OnMoveMade(MoveEventArgs e)
         {

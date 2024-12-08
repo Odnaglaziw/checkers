@@ -14,6 +14,7 @@ namespace checkers
         {
             get
             {
+                if (IsKing) return new (int, int)[] { (1, 1), (-1, 1), (-1, -1), (1, -1) };
                 return isBlack ? new (int, int)[] { (1, 1), (-1, 1) } : new (int, int)[] { (-1, -1), (1, -1) };
             }
         }
