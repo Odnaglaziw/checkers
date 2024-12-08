@@ -14,7 +14,7 @@ namespace checkers
         {
             // Настройка основной панели
             this.Dock = DockStyle.Top;
-            this.MinimumSize = new Size(210, 20);
+            this.MinimumSize = new Size(190, 20);
             this.AutoSize = true; // Подстраиваем высоту под содержимое
             this.Padding = new Padding(5); // Добавляем отступы
             this.Margin = new Padding(0, 0, 0, 5); // Отступы между элементами
@@ -25,7 +25,7 @@ namespace checkers
             messageLabel = new Label
             {
                 AutoSize = true, // Разрешаем перенос текста
-                MaximumSize = new Size(210, 200), // Ограничиваем ширину 
+                MaximumSize = new Size(190, 200), // Ограничиваем ширину 
                 Text = message.text,
                 Font = new Font("Segoe UI", 10),
                 BackColor = Color.Transparent,

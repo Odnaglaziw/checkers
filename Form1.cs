@@ -212,7 +212,10 @@ namespace checkers
         {
             var messageItem = new MessageItem(message);
             panel.Controls.Add(messageItem);
-            panel.ScrollControlIntoView(messageItem); // Прокрутить к последнему сообщению
+            panel.ScrollControlIntoView(messageItem);
+
+            panel.AutoScroll = true;
+            panel.VerticalScroll.Value = panel.VerticalScroll.Maximum;
         }
 
         private void panel1_Paint(object sender, PaintEventArgs e)
