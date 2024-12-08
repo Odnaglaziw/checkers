@@ -83,8 +83,8 @@ namespace checkers
                             LogConnection("Соединение закрыто сервером.");
                             break;
                         }
-                        LogError("Я получил сообщение");
                         string message = Encoding.UTF8.GetString(buffer, 0, result.Count);
+                        await Task.Delay(250);
                         if (!string.IsNullOrEmpty(message)) OnMessageReceived?.Invoke(message);
                         Log($"Получено сообщение: {message}");
                     }

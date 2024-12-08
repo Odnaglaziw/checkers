@@ -38,6 +38,12 @@ namespace checkers
             {
                 white = true;
                 gameBoard1.CanPlay = false;
+                ChatMessage Chatmessage = new ChatMessage
+                {
+                    who = white ? "white" : "black",
+                    text = "Ожидаем соперника :)"
+                };
+                AddMessageToPanelSafe(flowLayoutPanel1, Chatmessage);
             }
             Text = lobby.LobbyName;
             DoubleBuffered = true;
@@ -50,6 +56,7 @@ namespace checkers
             gameBoard1_Timer.Interval = 16;
             gameBoard1_Timer.Tick += GameBoard1_Timer_Tick;
             gameBoard1_Timer.Start();
+
         }
 
         public void Client_OnMessageReceived(string message)
@@ -69,6 +76,12 @@ namespace checkers
                     if (white) gameBoard1.CanPlay = true;
                     lastpart = DateTime.Now + new TimeSpan(0, 0, 60);
                     UpdateLabelSafe(label5, gameBoard1.CanPlay ? "Ваш ход" : "Чужой ход");
+                    ChatMessage Chatmessage = new ChatMessage
+                    {
+                        who = white ? "white" : "black",
+                        text = "Игра началась!"
+                    };
+                    AddMessageToPanelSafe(flowLayoutPanel1, Chatmessage);
                     return;
                 }
                 if (message == "Противник отключился.")
@@ -84,6 +97,15 @@ namespace checkers
                         this.Close();
                     }
                     return;
+                }
+                if (message.StartsWith("chat"))
+                {
+                    var text = message.Substring(5);
+                    var action = JsonSerializer.Deserialize<ChatMessage>(text);
+                    if (action != null)
+                    {
+                        AddMessageToPanel(flowLayoutPanel1, action);
+                    }
                 }
                 if (message.StartsWith("action"))
                 {
@@ -172,6 +194,44 @@ namespace checkers
             else
             {
                 label.Text = text;
+            }
+        }
+        public void AddMessageToPanelSafe(FlowLayoutPanel panel, ChatMessage message)
+        {
+            if (panel.InvokeRequired)
+            {
+                panel.Invoke(new System.Action(() => AddMessageToPanel(panel, message)));
+            }
+            else
+            {
+                AddMessageToPanel(panel, message);
+            }
+        }
+
+        private void AddMessageToPanel(FlowLayoutPanel panel, ChatMessage message)
+        {
+            var messageItem = new MessageItem(message);
+            panel.Controls.Add(messageItem);
+            panel.ScrollControlIntoView(messageItem); // Прокрутить к последнему сообщению
+        }
+
+        private void panel1_Paint(object sender, PaintEventArgs e)
+        {
+
+        }
+
+        private async void button1_Click_1(object sender, EventArgs e)
+        {
+            if (!string.IsNullOrEmpty(textBox1.Text))
+            {
+                ChatMessage Chatmessage = new ChatMessage
+                {
+                    who = white ? "white" : "black",
+                    text = textBox1.Text
+                };
+                string message = "chat:" + JsonSerializer.Serialize<ChatMessage>(Chatmessage);
+                await Program.client.SendMessageAsync(message);
+                AddMessageToPanelSafe(flowLayoutPanel1,Chatmessage);
             }
         }
     }
