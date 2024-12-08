@@ -140,7 +140,7 @@ namespace checkers
 
             if (selectedChecker != null)
             {
-                validMoves = selectedChecker.IsKing ? GetKingMoves(gridSize,selectedChecker) : GetValidMoves(selectedChecker);
+                validMoves = GetValidMoves(selectedChecker);
                 Invalidate(); // Перерисовываем поле для отображения подсветки
             }
             else
@@ -163,7 +163,7 @@ namespace checkers
                 }
                 if (selectedChecker != null)
                 {
-                    validMoves = selectedChecker.IsKing ? GetKingMoves(gridSize, selectedChecker) : GetValidMoves(selectedChecker);
+                    validMoves = GetValidMoves(selectedChecker);
                     Invalidate(); // Перерисовываем поле для отображения подсветки
                 }
             }
@@ -188,16 +188,29 @@ namespace checkers
                 checkers[clickedX, clickedY] = selectedChecker;
 
                 // Проверяем, была ли это рубка
-                
-                if (Math.Abs(clickedX - oldX) == 2 && Math.Abs(clickedY - oldY) == 2)
-                {
-                    capturedX = (clickedX + oldX) / 2;
-                    capturedY = (clickedY + oldY) / 2;
 
-                    // Удаляем шашку противника
-                    checkers[capturedX, capturedY] = null!;
-                    isCapture = true;
+                if (Math.Abs(clickedX - oldX) > 1 && Math.Abs(clickedY - oldY) > 1)
+                {
+                    // Вычисляем направление движения
+                    int directionX = clickedX > oldX ? 1 : -1;
+                    int directionY = clickedY > oldY ? 1 : -1;
+
+                    // Пройдем по клеткам между старой и новой позицией
+                    int x = clickedX - directionX;
+                    int y = clickedY - directionY;
+                    // Проверяем, есть ли шашка противника на текущей клетке
+                    if (checkers[x, y] != null && checkers[x, y].IsBlack != selectedChecker.IsBlack)
+                    {
+                        // Удаляем шашку противника
+                        checkers[x, y] = null!;
+                        isCapture = true;
+                    }
+
+                    // Переходим к следующей клетке
+                    capturedX = x;
+                    capturedY = y;
                 }
+
                 // Генерация события
                 OnMoveMade(new MoveEventArgs
                 {
@@ -253,9 +266,68 @@ namespace checkers
         private List<Point> GetValidMoves(Checker checker, bool onlyCapture = false)
         {
             var moves = new List<Point>();
-            var visited = new HashSet<Point>(); // Храним посещенные клетки
+            var visited = new HashSet<Point>();
+            bool captureFind = false;  // Флаг для отслеживания захвата
 
-            // Вложенный метод для проверки ходов с учетом посещенных клеток
+            // Метод для проверки ходов дамки
+            void CheckKingMoves(Checker currentChecker, (int, int) direction)
+            {
+                int stepX = currentChecker.X + direction.Item1;
+                int stepY = currentChecker.Y + direction.Item2;
+                Point? capturedCheckerPos = null;
+
+                while (stepX >= 0 && stepY >= 0 && stepX < gridSize && stepY < gridSize)
+                {
+                    var currentPos = new Point(stepX, stepY);
+
+                    if (checkers[stepX, stepY] == null)
+                    {
+                        if (capturedCheckerPos != null && !visited.Contains(currentPos))
+                        {
+                            // Добавляем возможный ход после рубки
+                            moves.Add(currentPos);
+                            visited.Add(currentPos);
+
+                            // Сохраняем съеденную шашку
+                            capturedCheckers.Add(capturedCheckerPos.Value);
+                            captureFind = true;  // Устанавливаем флаг захвата
+
+                            // Прекращаем дальнейшую проверку для дамки, как только захватили
+                            break;
+                        }
+                        else if (capturedCheckerPos == null && !onlyCapture && !captureFind)
+                        {
+                            // Обычный ход, если рубки нет
+                            moves.Add(currentPos);
+                        }
+                    }
+                    else if (checkers[stepX, stepY].IsBlack != currentChecker.IsBlack && capturedCheckerPos == null)
+                    {
+                        // Шашка противника найдена, проверяем клетку за ней
+                        int jumpX = stepX + direction.Item1;
+                        int jumpY = stepY + direction.Item2;
+
+                        if (jumpX >= 0 && jumpY >= 0 && jumpX < gridSize && jumpY < gridSize &&
+                            checkers[jumpX, jumpY] == null)
+                        {
+                            capturedCheckerPos = new Point(stepX, stepY); // Фиксируем позицию шашки для рубки
+                        }
+                        else
+                        {
+                            break; // Невозможно перепрыгнуть
+                        }
+                    }
+                    else
+                    {
+                        break; // Препятствие
+                    }
+
+                    stepX += direction.Item1;
+                    stepY += direction.Item2;
+                }
+            }
+
+            // Общий метод для проверки ходов
             void CheckMoves(Checker currentChecker, bool onlyCapture)
             {
                 foreach (var move in currentChecker.moves)
@@ -267,13 +339,13 @@ namespace checkers
                     {
                         var currentPos = new Point(newX, newY);
 
-                        if (checkers[newX,newY] == null && !visited.Contains(currentPos) && !onlyCapture)
+                        if (checkers[newX, newY] == null && !visited.Contains(currentPos) && !onlyCapture)
                         {
-                            moves.Add(currentPos); // Добавляем обычный ход
+                            moves.Add(currentPos);
                             visited.Add(currentPos);
                         }
                         else if (checkers[newX, newY] != null &&
-                                 checkers[newX,newY].IsBlack != currentChecker.IsBlack)
+                                 checkers[newX, newY].IsBlack != currentChecker.IsBlack)
                         {
                             int jumpX = newX + move.Item1;
                             int jumpY = newY + move.Item2;
@@ -285,62 +357,37 @@ namespace checkers
 
                                 if (!visited.Contains(jumpPos))
                                 {
-                                    capturedCheckers.Add(currentPos); // Добавляем съеденную шашку
-                                    if (!onlyCapture) moves.Add(jumpPos);
-                                    else secondMoves.Add(jumpPos);
+                                    moves.Add(jumpPos);
                                     visited.Add(jumpPos);
 
-                                    // Рекурсивно проверяем дальнейшие ходы, если это рубка
+                                    // Сохраняем съеденную шашку
+                                    capturedCheckers.Add(currentPos);
+
+                                    // Рекурсивно проверяем дальнейшие ходы
                                     var tempChecker = new Checker(jumpX, jumpY, currentChecker.IsBlack);
-                                    CheckMoves(tempChecker, onlyCapture: true); // Передаем параметр onlyCapture
+                                    CheckMoves(tempChecker, true);
                                 }
                             }
                         }
                     }
                 }
+
+                // Проверяем дополнительные ходы дамки
+                if (currentChecker.IsKing && !captureFind)  // Если захват еще не произошел
+                {
+                    var directions = new (int, int)[] { (1, 1), (-1, 1), (-1, -1), (1, -1) };
+                    foreach (var direction in directions)
+                    {
+                        CheckKingMoves(currentChecker, direction);
+                    }
+                }
             }
 
-            // Начинаем проверку с текущей шашки
             CheckMoves(checker, onlyCapture);
 
             return moves;
         }
-        public List<Point> GetKingMoves(int gridSize, Checker checker)
-        {
-            var directions = new (int, int)[] { (1, 1), (-1, 1), (-1, -1), (1, -1) };
-            var validMoves = new List<Point>();
 
-            foreach (var direction in directions)
-            {
-                int stepX = checker.X + direction.Item1;
-                int stepY = checker.Y + direction.Item2;
-
-                while (stepX >= 0 && stepY >= 0 && stepX < gridSize && stepY < gridSize)
-                {
-                    if (checkers[stepX, stepY] == null)
-                    {
-                        validMoves.Add(new Point(stepX, stepY));
-                    }
-                    else
-                    {
-                        // Проверяем возможность рубки
-                        if (checkers[stepX, stepY].IsBlack != checker.IsBlack)
-                        {
-                            int jumpX = stepX + direction.Item1;
-                            int jumpY = stepY + direction.Item2;
-                            if (jumpX >= 0 && jumpY >= 0 && jumpX < gridSize && jumpY < gridSize && checkers[jumpX, jumpY] == null)
-                            {
-                                validMoves.Add(new Point(jumpX, jumpY));
-                            }
-                        }
-                        break; // Останавливаемся на препятствии
-                    }
-                    stepX += direction.Item1;
-                    stepY += direction.Item2;
-                }
-            }
-            return validMoves;
-        }
         protected virtual void OnMoveMade(MoveEventArgs e)
         {
             MoveMade?.Invoke(this, e);
