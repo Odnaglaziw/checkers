@@ -104,7 +104,7 @@ namespace checkers
                     var action = JsonSerializer.Deserialize<ChatMessage>(text);
                     if (action != null)
                     {
-                        AddMessageToPanel(flowLayoutPanel1, action);
+                        AddMessageToPanelSafe(flowLayoutPanel1, action);
                     }
                 }
                 if (message.StartsWith("action"))
