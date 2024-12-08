@@ -3,13 +3,20 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml;
 
 namespace checkers
 {
     public class Checker
     {
         private Point pos;
-        public static readonly (int, int)[] moves = { (1, 1), (-1, 1), (-1, -1), (1, -1) }; // Возможные ходы
+        public (int, int)[] moves // Возможные ходы
+        {
+            get
+            {
+                return isBlack ? new (int, int)[] { (1, 1), (-1, 1) } : new (int, int)[] { (-1, -1), (1, -1) };
+            }
+        }
         private bool isKing; // Дамка
         private readonly bool isBlack; // Цвет шашки
 

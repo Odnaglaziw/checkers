@@ -47,7 +47,7 @@ namespace checkers
             }
             Text = lobby.LobbyName;
             DoubleBuffered = true;
-
+            SetLabelVisibilitySafe(label4,false);
             Upd();
             lastpart = DateTime.Now + new TimeSpan(0, 0, 60);
             gameBoard1.MoveMade += GameBoard1_MoveMade;
@@ -73,6 +73,7 @@ namespace checkers
                 }
                 if (message == "start")
                 {
+                    SetLabelVisibilitySafe(label4, true);
                     if (white) gameBoard1.CanPlay = true;
                     lastpart = DateTime.Now + new TimeSpan(0, 0, 60);
                     UpdateLabelSafe(label5, gameBoard1.CanPlay ? "Ваш ход" : "Чужой ход");
@@ -217,6 +218,18 @@ namespace checkers
             panel.AutoScroll = true;
             panel.VerticalScroll.Value = panel.VerticalScroll.Maximum;
         }
+        public void SetLabelVisibilitySafe(Label label, bool isVisible)
+        {
+            if (label.InvokeRequired)
+            {
+                label.Invoke(new System.Action(() => SetLabelVisibilitySafe(label, isVisible)));
+            }
+            else
+            {
+                label.Visible = isVisible;
+            }
+        }
+
 
         private void panel1_Paint(object sender, PaintEventArgs e)
         {

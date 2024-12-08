@@ -31,6 +31,7 @@ namespace checkers
         private Checker selectedChecker = null!;
         private List<Point> validMoves = new List<Point>();
         private List<Point> capturedCheckers = new List<Point>();
+        private List<Point> secondMoves = new List<Point>();
         public event EventHandler<MoveEventArgs> MoveMade;
         public int WhiteCount
         {
@@ -134,34 +135,42 @@ namespace checkers
             int clickedY = e.Y / cellSize;
 
             // Поиск шашки в нажатой клетке
-            selectedChecker = null!;
-            for (int row = 0; row < gridSize; row++)
-            {
-                for (int col = 0; col < gridSize; col++)
-                {
-                    if (checkers[row, col] != null &&
-                        checkers[row, col].X == clickedX &&
-                        checkers[row, col].Y == clickedY &&
-                        checkers[row, col].IsBlack != White) // Проверяем команду
-                    {
-                        selectedChecker = checkers[row, col];
-                        break;
-                    }
-                }
-                if (selectedChecker != null) break;
-            }
+            //selectedChecker = null!;
 
             if (selectedChecker != null)
             {
                 validMoves = GetValidMoves(selectedChecker);
                 Invalidate(); // Перерисовываем поле для отображения подсветки
             }
+            else
+            {
+                selectedChecker = null!;
+                for (int row = 0; row < gridSize; row++)
+                {
+                    for (int col = 0; col < gridSize; col++)
+                    {
+                        if (checkers[row, col] != null &&
+                            checkers[row, col].X == clickedX &&
+                            checkers[row, col].Y == clickedY &&
+                            checkers[row, col].IsBlack != White) // Проверяем команду
+                        {
+                            selectedChecker = checkers[row, col];
+                            break;
+                        }
+                    }
+                    if (selectedChecker != null) break;
+                }
+                if (selectedChecker != null)
+                {
+                    validMoves = GetValidMoves(selectedChecker);
+                    Invalidate(); // Перерисовываем поле для отображения подсветки
+                }
+            }
         }
         protected override void OnMouseUp(MouseEventArgs e)
         {
             if (!CanPlay) return;
-            if (selectedChecker == null) return;
-
+            bool isCapture = false;
             int cellSize = Math.Min(Width, Height) / gridSize;
             int clickedX = e.X / cellSize;
             int clickedY = e.Y / cellSize;
@@ -178,7 +187,7 @@ namespace checkers
                 checkers[clickedX, clickedY] = selectedChecker;
 
                 // Проверяем, была ли это рубка
-                bool isCapture = false;
+                
                 if (Math.Abs(clickedX - oldX) == 2 && Math.Abs(clickedY - oldY) == 2)
                 {
                     capturedX = (clickedX + oldX) / 2;
@@ -195,14 +204,16 @@ namespace checkers
                     From = new Point(oldX, oldY),
                     To = new Point(clickedX, clickedY),
                     IsCapture = isCapture,
-                    Capture = new Point(capturedX,capturedY)
+                    Capture = new Point(capturedX,capturedY),
+                    HasCaptureMoves = HasCaptureMoves(selectedChecker)
                 });
 
                 // Сбрасываем выбор
-                selectedChecker = null!;
             }
+            if (!isCapture) selectedChecker = null!;
             validMoves.Clear();
             capturedCheckers.Clear();
+            secondMoves.Clear();
             Invalidate(); // Перерисовываем поле
         }
         protected override void OnPaint(PaintEventArgs e)
@@ -221,6 +232,10 @@ namespace checkers
             {
                 g.FillRectangle(new SolidBrush(Color.FromArgb(128, Color.Purple)), captured.X * cellSize, captured.Y * cellSize, cellSize, cellSize);
             }
+            foreach (var secondmove in secondMoves)
+            {
+                g.FillRectangle(new SolidBrush(Color.FromArgb(128, Color.Gold)), secondmove.X * cellSize, secondmove.Y * cellSize, cellSize, cellSize);
+            }
 
             // Рисуем шашки
             foreach (var checker in checkers)
@@ -236,7 +251,7 @@ namespace checkers
             // Вложенный метод для проверки ходов с учетом посещенных клеток
             void CheckMoves(Checker currentChecker, bool onlyCapture)
             {
-                foreach (var move in Checker.moves)
+                foreach (var move in currentChecker.moves)
                 {
                     int newX = currentChecker.X + move.Item1;
                     int newY = currentChecker.Y + move.Item2;
@@ -264,7 +279,8 @@ namespace checkers
                                 if (!visited.Contains(jumpPos))
                                 {
                                     capturedCheckers.Add(currentPos); // Добавляем съеденную шашку
-                                    moves.Add(jumpPos);
+                                    if (!onlyCapture) moves.Add(jumpPos);
+                                    else secondMoves.Add(jumpPos);
                                     visited.Add(jumpPos);
 
                                     // Рекурсивно проверяем дальнейшие ходы, если это рубка
@@ -300,7 +316,7 @@ namespace checkers
         private bool HasCaptureMoves(Checker checker)
         {
             // Перебираем все возможные направления для текущей шашки
-            foreach (var move in Checker.moves)
+            foreach (var move in checker.moves)
             {
                 int newX = checker.X + move.Item1;
                 int newY = checker.Y + move.Item2;

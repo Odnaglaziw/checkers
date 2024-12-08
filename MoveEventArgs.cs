@@ -13,5 +13,6 @@ namespace checkers
         public Point To { get; set; }
         public bool IsCapture { get; set; }
         public Point Capture { get; set; }
+        public bool HasCaptureMoves { get; set; }
     }
 }
