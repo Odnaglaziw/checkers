@@ -149,17 +149,25 @@ namespace checkers
             {
                 Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
             };
-            var action = JsonSerializer.Serialize(new
+
+            // Создаем объект Action
+            var action = new Action
             {
-                Action = comand,
-                From = $"{e.From.X}:{e.From.Y}",
-                To = $"{e.To.X}:{e.To.Y}",
-                e.IsCapture,
-                capture = $"{e.Capture.X}:{e.Capture.Y}"
-            }, options);
-            string message = $"action:{action}";
+                action = comand,
+                from = $"{e.From.X}:{e.From.Y}",
+                to = $"{e.To.X}:{e.To.Y}",
+                iscapture = e.IsCapture,
+                capture = $"{e.Capture.X}:{e.Capture.Y}",
+                HasCaptureMoves = e.HasCaptureMoves
+            };
+
+            // Сериализуем объект Action в строку JSON
+            string actionJson = JsonSerializer.Serialize(action, options);
+
+            string message = $"action:{actionJson}";
             await Program.client.SendMessageAsync(message);
         }
+
 
         private void Upd()
         {
